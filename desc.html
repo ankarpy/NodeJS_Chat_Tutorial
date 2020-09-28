@@ -80,6 +80,10 @@
   .pl-v {
    color: #ed6a43;
   }
+  tt {
+    background: rgb(245,245,245);
+    padding: 4px 6px;
+  }
  </style>
 
 </head>
@@ -108,12 +112,12 @@
   <div class="markdown-body entry-content">
    <h2>Real-Time Chat készítése NodeJS-el</h2>
 
-   <p>Ebben a cikkben bemutatom, hogyan lehetséges egy valós idejű chat klienset csinálni HTML és JavaScript (NodeJS) segítségével.</p>
+   <p>Ebben a cikkben bemutatom, hogyan lehetséges egy valós idejű chat klienset készíteni HTML és JavaScript (NodeJS) segítségével.</p>
 
    <p>A JavaScript egy scriptnyelv/programozási nyelv, amelyet a böngésző futtat az oldal letöltésekor <i>(kliens oldalon)</i>. Interaktívvá lehet tenni vele a felhasználói felületeket: kezelni lehet vele az inputokat, programozni lehet vele eseményeket, továbbá animációkat is állíthatunk be vele.</p>
 
 	 <p><b>Felmerül a kérdés viszont, hogy mi az a NodeJS akkor?</b></p>
-	 <p>A Node.js egy szoftverrendszer amit webszerverek <i>(szerver oldal)</i> készítésére hoztak létre. A programok rajta JavaScript-ben írhatóak, eseményalapúak. Lényegében a JavaScript programozási nyelvvel már nem csak a felhasználók által látott tartalommal bánhatunk, hanem folyamatosan a webszerveren futó JavaScript programot is írhatunk: ennek hála, tudjuk elkészíteni például a chat-ünket.</p>
+	 <p>A Node.js egy szoftverrendszer amit webszerverek <i>(szerver oldal)</i> készítésére hoztak létre. A programok rajta JavaScript-ben írhatóak, eseményalapúak. Lényegében a JavaScript programozási nyelvvel már nem csak a felhasználók által látott tartalommal bánhatunk, hanem folyamatosan a webszerveren futó JavaScript programot is írhatunk: ennek hála, tudjuk elkészíteni például a chat alkalmazásunkat.</p>
 
 	 <p><small>Megjegyzés: A NodeJS szorosan összekapcsolódik az NPM(Node Package Manager)-el, ami segítségével külső, előre megírt segéd program-csomagokat <i>(repository, repo)</i> kezelhetünk a saját programunkon belül.</small></p>
 	 <p>
@@ -123,14 +127,67 @@
    <ol>
     <li><a href="#c1">A projekt alapjai</a>
     </li>
+    <li><a href="#c2">A chat megjelenése</a>
+    </li>
+    <li><a href="#c3">A NodeJS szerver felépítése</a>
+    </li>
    </ol>
 
    <p>A lépéseket végigkövetve LEGO szerűen összeáll majd a működő kis chat alkalmazásunk, és megértjük a program felépítését.</p>
 
    <h2 id="c1">1. A projekt alapjai</h2>
 
-	 <p>Első körön töltsük le a NodeJS-t és telepítsük:</p>
+	 <p>Első körön töltsük le a NodeJS-t és telepítsük (vele együtt települ az NPM is):</p>
    <p><a href="https://phoenixnap.com/kb/install-node-js-npm-on-windows" target="_blank">NodeJS letöltése Windowsra</a></p>
+
+   <p>Ha ezzel megvagyunk, akkor a következő 2 fájlra lesz szükségünk. Hozzuk létre a</p>
+   <ul>
+     <li><b>index.html</b></li>
+     <li><b>server.js</b></li>
+   </ul>
+   <p>nevű fájlokat.</p>
+
+   <h2 id="c2">2. A chat megjelenése</h2>
+
+   <p>A <b>index.html</b>-el fogjuk kezdeni az utunkat, amellyel elkészítjük a Chat alkalmazásnak a megjelenését amit a felhasználók elérhetnek.</p>
+
+   <p>Kezdjük is szép sorjában. Az <b>index.html</b> alapvető sorait már fejből is tudhatjuk:</p>
+   <img src="images/1.png"/>
+   <p><i>Mit szeretnénk megjeleníteni? Mi kell egy chat alkalmazáshoz?</i></p>
+   <p>Először is, ne feledkezzünk meg a html fájlunk karakter készletét <tt>UTF-8</tt>-ra állítani a head-ben.</p>
+
+   <p>Ezek után, a következő elemekre lesz szükségünk:</p>
+   <ul>
+     <li><b>Felhasználó név</b> (text input)</li>
+     <li><b>Üzenetváltás log</b> (textarea)</li>
+     <li><b>Kündendő üzenet</b> (text input)</li>
+     <li><b>Küldés gomb</b> (button)</li>
+   </ul>
+   <p>Hozzuk létre az említett elemeket, és adjunk nekik megfelelő ID-kat. (<tt>#name</tt>, <tt>#output</tt>, <tt>#message</tt>, <tt>#send</tt>)</p>
+   <p>Fontos továbbá, hogy az <tt>#output</tt> textarea elementünket ellássuk a <b>disabled</b> attribútummal, ugyanis nem szeretnénk ha a felhasználó módosítani tudná a chat előzmények tartalmát.</p>
+   <p>Esztétikai okokból ezeket az elemeket csomagoljuk egy <tt>#chatAblak</tt> nevű <b>div</b> elementbe, adjunk nekik placeholdereket, és ráadásképp még adhatunk az oldal tetejére címsort is.</p>
+   <img src="images/2.png"/>
+
+   <p>Egyenlőre valahogy így néz ki az oldalunk:</p>
+   <img src="images/3.png"/>
+   <p>Természetesen ez a "csiszolatlan-gyémánt" külső elég gyér hatást kelthet az oldalunkra látogató felhasználóknak.</p>
+   <p>Kicsit fűszerezzük meg hát a dolgokat, formázzuk ízünk szerint az oldalt a head-ben, <b>CSS</b> segítségével.</p>
+   <hr/>
+
+   <p>A következőket változtattam én:</p>
+   <ul>
+     <li>A <tt>body</tt> tartalmát középre igazítottam</li>
+     <li>A <tt>#chatAblak</tt>-ot megfelelő <tt>padding</tt>-el, <tt>margin</tt>-nel (hogy középen legyen) és <tt>border</tt>-el láttam el, továbbá megadtam a maximális szélességét.</li>
+     <li>A <tt>textarea</tt> tartalmát szintúgy <tt>padding</tt>-el láttam el, és alul-felül <tt>margin</tt>-nel. Háttérszínt állítottam.</li>
+     <li>A <tt>textarea</tt>-nak 400px magasságot, 100%-os szélességet állítottam (amiből kivontam 20 pixelt, mivel annyival van behúzva a <tt>#chatAblak</tt> tartalma). </li>
+     <li>Utolsóként pedig a <tt>textarea</tt> méretezhetőségét levettem, illetve bármilyen alap <tt>border</tt>-t és <tt>outline</tt>-t leszedtem róla.</li>
+   </ul>
+   <p>Valahogy így:</p>
+
+   <img src="images/4.png"/>
+   <p>S immár kész is a megjelenésünk:</p>
+   <img src="images/5.png"/>
+   <h2 id="c3">A NodeJS szerver felépítése</h2>
 
  </div>
 </article>
