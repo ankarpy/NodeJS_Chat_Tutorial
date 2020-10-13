@@ -116,7 +116,7 @@
 
    <p>A JavaScript egy scriptnyelv/programozási nyelv, amelyet a böngésző futtat az oldal letöltésekor <i>(kliens oldalon)</i>. Interaktívvá lehet tenni vele a felhasználói felületeket: kezelni lehet vele az inputokat, programozni lehet vele eseményeket, továbbá animációkat is állíthatunk be vele.</p>
 
-	 <p><b>Felmerül a kérdés viszont, hogy mi az a NodeJS akkor?</b></p>
+	 <p><b>Felmerül a kérdés, hogy mi az a NodeJS akkor?</b></p>
 	 <p>A Node.js egy szoftverrendszer amit webszerverek <i>(szerver oldal)</i> készítésére hoztak létre. A programok rajta JavaScript-ben írhatóak, eseményalapúak. Lényegében a JavaScript programozási nyelvvel már nem csak a felhasználók által látott tartalommal bánhatunk, hanem folyamatosan a webszerveren futó JavaScript programot is írhatunk: ennek hála, tudjuk elkészíteni például a chat alkalmazásunkat.</p>
 
 	 <p><small>Megjegyzés: A NodeJS szorosan összekapcsolódik az NPM(Node Package Manager)-el, ami segítségével külső, előre megírt segéd program-csomagokat <i>(repository, repo)</i> kezelhetünk a saját programunkon belül.</small></p>
@@ -129,7 +129,19 @@
     </li>
     <li><a href="#c2">A chat megjelenése</a>
     </li>
-    <li><a href="#c3">A NodeJS szerver felépítése</a>
+    <li><a href="#c3">Merre tovább?</a>
+    </li>
+    <li><a href="#c4">A NodeJS szerver alapjai</a>
+    </li>
+    <li><a href="#c5">3/1 eset: A chat ablak betöltése</a>
+    </li>
+    <li><a href="#c6">3/2 eset: Üzenet mentése és klienseknek elküldése</a>
+    </li>
+    <li><a href="#c7">3/3 eset: kliensek eltárolása & POLLING, azaz üzenetek letöltése</a>
+    </li>
+    <li><a href="#c8">Már nincsen sok hátra</a>
+    </li>
+    <li><a href="#c9">Futtatás</a>
     </li>
    </ol>
 
@@ -139,13 +151,15 @@
 
 	 <p>Első körön töltsük le a NodeJS-t és telepítsük (vele együtt települ az NPM is):</p>
    <p><a href="https://phoenixnap.com/kb/install-node-js-npm-on-windows" target="_blank">NodeJS letöltése Windowsra</a></p>
+   <p>Ez a lépés elengedhetetlen, hogy a szervert működésképes állapotba tudjuk hozni.</p>
 
-   <p>Ha ezzel megvagyunk, akkor a következő 2 fájlra lesz szükségünk. Hozzuk létre a</p>
+   <p>Ha ezzel megvagyunk, akkor a projektünkön belül 2 fájlra lesz szükségünk. Hozzuk létre a</p>
    <ul>
      <li><b>index.html</b></li>
      <li><b>server.js</b></li>
    </ul>
    <p>nevű fájlokat.</p>
+   <p>Ezzel előkészítve az alkalmazásunkat.</p>
 
    <h2 id="c2">2. A chat megjelenése</h2>
 
@@ -154,7 +168,7 @@
    <p>Kezdjük is szép sorjában. Az <b>index.html</b> alapvető sorait már fejből is tudhatjuk:</p>
    <img src="images/1.png"/>
    <p><i>Mit szeretnénk megjeleníteni? Mi kell egy chat alkalmazáshoz?</i></p>
-   <p>Először is, ne feledkezzünk meg a html fájlunk karakter készletét <tt>UTF-8</tt>-ra állítani a head-ben.</p>
+   <p>Először is, ne feledkezzünk meg a html fájlunk karakterkészletét <tt>UTF-8</tt>-ra állítani a head-ben.</p>
 
    <p>Ezek után, a következő elemekre lesz szükségünk:</p>
    <ul>
@@ -187,13 +201,123 @@
    <img src="images/4.png"/>
    <p>S immár kész is a megjelenésünk:</p>
    <img src="images/5.png"/>
-   <h2 id="c3">A NodeJS szerver felépítése</h2>
+   <h2 id="c3">Merre tovább?</h2>
+   <p>Előzőekben elkészültünk a Chat alkalmazásunk kinézetével. Itt az ideje, hogy életre is keltsük a kreálmányunkat.</p>
+   <p>Ehhez meg kell írnunk az említett NodeJS technológiával a szervert, amely felel majd az üzenetek fogadásáért, mentéséért.</p>
+   <hr/>
 
+   <p>Lépjünk át a <b>server.js</b> nevű fájlunkba, és írjuk bele a következő sort:</p>
+   <img src="images/6.png"/>
+
+   <p>Ezek után futtassuk a kódunkat a Terminal segítségével: Nyissuk meg a Terminalt, majd navigáljunk vele a projektünk mappájába a <tt>cd</tt> paranccsal</p>
+   <p><tt>cd c:\projekt_helye</tt></p>
+   <p>Majd futtassuk szerverünket:</p>
+   <p><tt>node server.js</tt></p>
+   <p>Ha minden igaz, megjelent a következő kis üzenet:</b>
+   <p><tt><b>Teszt</b></tt></p>
+   <img src="images/7.png"/>
+   <p><small>(A képernyőkép MacOS-ről származik, Windowson eltérő a Terminal kinézete)</small></p>
+   <p>Ez azt jelenti, hogy a NodeJS megfelelően lett telepítve a gépünkre, és a szervert futtatni tudjuk majd a <tt><b>http://localhost:8080</b></tt> URL címen</p>
+   <hr/>
+   <br/>
+   <h2 id="c4">A NodeJS szerver alapjai</h2>
+   <p><b>Egyenlőre nem nagyon van funkciója a kódunknak, úgyhogy kezdjük el bővítgetni:</b></p>
+
+   <p>1) Importáljuk be a legfőbb funkciókat (<tt>http</tt>, <tt>url</tt> és <tt>file system</tt>)</p>
+   <p>Ezek elengedhetetlenek a szerverünk működéséhez.</p>
+   <p>2) Hozzunk létre az üzeneteknek (<tt>messages</tt>) és a felhasználóknak (<tt>clients</tt>) egy array-t</p>
+   <p>3) Majd hozzuk létre a szervert, a <tt>8080</tt> porton figyelve a lekéréseket.</p>
+   <p>Így:</p>
+   <img src="images/8.png"/>
+   <p>Így a <tt>http</tt>-n létrehoztuk a szervert ami a <tt>8080</tt> porton fut. A szerver figyelni kezdi a lekéréseket (<tt>req</tt>), illetve válaszokat ad (<tt>res</tt>).</p>
+   <p>Az oldalunk innentől a <tt>http://localhost:8080</tt> url cím alatt lesz elérhető</p>
+   <h2 id="c5">3/1 eset: A chat ablak betöltése</h2>
+   <p>A felhasználó felmegy a chat alkalmazásunk <tt>http://localhost:8080</tt>-címére. Ilyen esetben bekell töltenünk neki az <tt>index.html</tt>-ben található chat ablakunkat. Ehhez ellenőrizzük az URL lekérésünket, hogy valóban a főoldali URL címet kérte-e le.</p>
+
+   <p>Kérjük le az <tt>url</tt> cím összetevőit a <tt>url.parse(req.url);</tt> paranccsal.</p><p>Ha a kapott <tt>pathname == '/'</tt> akkor a <tt>file system</tt> segítségével beolvassuk az <tt>index.html</tt>-t (<tt>fs.readFile()</tt> paranncsal)</p>
+   <p>A beolvasott <tt>index.html</tt>-t pedig <tt>response</tt>-ként visszaadjuk a felhasználónak, így: <tt>res.end(data);</tt></p>
+   <br/>
+   <p>Egészítsük ki a kódunkat, hogy a szerveres rész így nézzen ki:</p>
+
+   <img src="images/9.png"/>
+
+   <p>Ezzel meg is vagyunk. Futtassuk a szerverünket a</p>
+   <p><tt>node server.js</tt></p>
+   <p>kóddal ismét. Ha minden igaz, a <tt>http://localhost:8080</tt> címen láthatjuk mostmár a chat ablakunkat<p>
+   <p>Így viszont nem csupán egyszer lefutott a kódunk, hanem folyamatosan működésben is marad, hisz ez egy szerver dolga.</p>
+   <p>Fejlesszük tovább a kódunkat, úgyhogy állítsuk le a szervert addigis:</p>
+   <p><tt>CTRL + c</tt> billentyűkombinációval tehetjük meg ezt. (A Terminal ablakába lépve)</p>
+
+   <h2 id="c6">3/2 eset: Üzenet mentése és klienseknek elküldése</h2>
+   <p>A felhasználók tegyük fel üzeneteket is szeretnének küldeni, hisz ez lenne a lényege a projektünknek.</p>
+   <p>Mondjuk azt, hogy az üzeneteket a következő URL címen várjuk: <tt>http://localhost:8080/message/ÜZENET_HELYE</tt>. Ilyen esetben lekell mentenünk a szerveren a <tt>messages</tt> arrayunkba a beérkező üzenetet.</p>
+   <p>Adjunk hozzá egy <tt>else if</tt> ágat az <tt>if(url_parts.pathname == '/')</tt> kódunk után. Azt pedig töltsük ki a következőképp:</p>
+
+   <img src="images/10.png"/>
+   <p>Így, a <tt>decodeURIComponent()</tt> paranccsal dekódoltuk az <tt>url path</tt> nevét, és a <tt>.substr(9)</tt> paranccsal leszedtük az első 9 karaktert <small><i>(azaz a <b>/message/</b>-t)</i></small>.</p>
+   <p>Így megmaradt az utána következő rész, az <tt>ÜZENET_HELYE</tt></p>
+   <p>Ezután továbbszeretnénk küldeni az üzenetet az aktív klienseknek. Ehhez <tt>JSON</tt> objectet fogunk alkalmazni.</p>
+   <p><b>Mi az a JSON?</b></p>
+   <p>A JSON leegyszerűsítve array-okat képes tárolni szöveg formájában. <a href="https://hu.wikipedia.org/wiki/JSON" target="_blan">Bővebb információ a JSON-ról Wikipédián</a></p>
+   <p>Egészítsük ki a kódunkat a <tt>res.end();</tt> előtt a következő sorokra:</p>
+   <img src="images/10_2.png"/>
+   <p>Így <tt>for</tt> ciklussal végigmentünk a klienseken (akikkel egyenlőre még nem foglalkoztunk, hisz a <tt>clients</tt> arrayunk üres), és elküldtük nekik response-ként az új üzenetet.</p>
+   <p><b>Kitérve kicsit a kliens részre:</b></p>
+   <p>Az oldalunkra érkező felhasználók <tt>response</tt>-kat (válaszokat) várnak a szervertől. Ezeket a response-kat a következőképp kapják meg: <tt>res.end(ESETLEGES_ADAT_HELYE)</tt>
+   <p>Jelen esetben, a <tt>clients</tt> arrayban fogjuk eltárolni majd ezeket a válaszra váró klienseket (<tt>res</tt>). Így ha nekik akarunk bármilyen adatot küldeni, elég végigmenni az összes kliensen egy <tt>for</tt> ciklussal, és <tt>clients[i].end(ADAT_HELYE)</tt> kóddal el is tudjuk küldeni a kívánt adatot nekik.</p>
+
+   <h2 id="c7">3/3 eset: kliensek eltárolása & POLLING, azaz üzenetek letöltése</h2>
+   <p>Első körön adjuk hozzá a kliensekhez (<tt>clients</tt>) az adott felhasználóhoz tartozó <tt>res</tt> változónkat. Így nyomon követjük éppen kik is vannak a szerverünkön.</p>
+   <hr/>
+   <p>A felhasználó folyamatosan lekéri majd a <tt>http://localhost:8080/poll/EDDIG_LETÖLTÖTT_ÜZENETEK_SZÁMA</tt>-címet. Ezt hívják <i>LONG POLLING</i>-nak. Ha több üzenet van eltárolva a szerveren, mint amennyit a kliens letöltött, akkor ezen URL cím lekérése az új üzeneteket adja válaszként.</p>
+
+   <p>A korábban említett módon nyerjük ki az URL-ből <tt>/poll/</tt> után található számot, és nézzük meg, ennél több üzenet van-e elmentve a szerveren.</p>
+   <p>Ha igen, a régebbi üzeneteket leszámítva (<tt>slice</tt> paranccsal leszedve), adjuk vissza <tt>JSON</tt> Objectként az új üzeneteket és az össz üzenet számot.</p>
+   <p>Egészítsük ki ismételten egy <tt>else if</tt> ággal az <tt>if(url_parts.pathname == '/')</tt> kódunkat.<p>
+   <p>Valahogy így kéne, hogy kinézzen:</p>
+
+   <img src="images/11.png"/>
+
+   <h2 id="c8">Már nincsen sok hátra</h2>
+   <p>Lépjünk vissza az <b>index.html</b> fájlunkba, és egészítsük ki még a <tt>head</tt> tartalmát.</p>
+   <p>Két dolgot kell még megírnunk:</p>
+   <ol>
+    <li><span>A gomb lenyomására üzenet küldés</span>
+    </li>
+    <li><span>Folyamatos POLLING, azaz lekérdezés, hogy van-e új üzenet a szerveren.</span>
+    </li>
+    </ol>
+    <br/>
+    <p><b>1. A gomb lenyomására üzenet küldés</b></p>
+    <p>Ehhez <tt>jQuery</tt>-t fogunk használni, ami egy Javascript library. <a href="https://hu.wikipedia.org/wiki/JQuery" target="_blank">Bővebben a Wikipédián</a></p>
+    <p>Importáljuk be tehát a jQuery-t: <tt>http://code.jquery.com/jquery-1.6.4.min.js</tt></p>
+    <p>Majd írjuk meg a következő scriptet:</p>
+
+   <img src="images/12.png"/>
+   <p>Így, a <tt>$(document).ready()</tt>-val megvárjuk míg a dokumentumunk betölt, majd a <tt>$("button").click()</tt> funkcióval figyeljük az esetleges küldés-kattintásokat</p>
+   <p><tt>encodeURIComponent()</tt> paranccsal kódoljuk az üzenetünket, és elküldjük a felhasználó nevünkkel együtt a <tt>http://localhost:8080/message/</tt> címre</p>
+
+   <p><b>2. Folyamatos POLLING, azaz lekérdezés, hogy van-e új üzenet a szerveren.</b></p>
+   <p>Ezek után egészítsük ki a scriptünket a következőre:</p>
+
+  <img src="images/13.png"/>
+  <p>Így, létrehoztuk a <tt>poll</tt> funkciót, ami folyamatosan lekéri önmagát. Ha válasz érkezik a szerverről (azaz volt új üzenet a szerveren), akkor a <tt>#output</tt> textarea tartalmát kiegészítjük az új üzenetekkel és elmentjük az új össz üzenet számot.</p>
+  <p>Ez a funkció felel azért is, hogy az oldal betöltésekor az eddig felhalmozódott üzeneteket is letöltse.</p>
+  <p>Ha minden igaz, el is készültünk.</p>
+
+  <h2 id="c9">Futtatás</h2>
+  <p>Futtassuk a szerverünket a korábban említett módon, a terminálból:</p>
+  <p><tt>node server.js</tt></p>
+  <p>Majd navigáljunk a böngészőnkben a <tt>http://localhost:8080/</tt> oldalra.</p>
+  <p>Ha nem írtunk el semmit, működni fog.</p>
+  
+  <hr/>
+  <p><i>Készítette: Kárpáti András</i></p>
  </div>
 </article>
 	<aside>
   <h3>Utolsó módosítás:
-		2020. szeptember 28-án
+		2020. október 13-án.
  </h3>
  </aside>
 </div>

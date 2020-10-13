@@ -14,49 +14,55 @@ http.createServer(function (req, res) {
    // URL cím lekérése
    var url_parts = url.parse(req.url);
 
-
+   // Ha az URL a "localhost:8080"-ra mutat, akkor töltsük be a Chat Ablakot.
    if(url_parts.pathname == '/') {
-      // Ha az URL a "localhost:8080"-ra mutat, akkor mutassuk a felhasználónak a Chat Ablakot.
 
+      // index.html beolvasása, és válaszként visszaadása
       fs.readFile('./index.html', function(err, data) {
         res.end(data);
       });
 
-   } else if(url_parts.pathname.substr(0, 5) == '/poll') {
-      // Ha az URL a "localhost:8080/poll"-ra mutat, akkor töltsük le az üzeneteket.
+   } else if(url_parts.pathname.substr(0, 9) == '/message/') {
+    // Ha az URL a "localhost:8080/message/"-ra mutat, akkor mentsük az URL-ben található üzenetet
 
-      // A kliensekhez hozzáadjuk a lekérést
-      clients.push(res);
-
-      // Megszámoljuk, hány üzenetet töltött le eddig a kliens
-      var count = url_parts.pathname.replace(/[^0-9]*/, '');
-
-      if(messages.length > count) {
-        // Ha van új üzenet, töltse le
-
-        res.end(JSON.stringify( {
-          count: messages.length,
-          append: messages.slice(count).join("\n")+"\n"
-        }));
-
-      }
-  } else if(url_parts.pathname.substr(0, 9) == '/message/') {
-
-    // Ha üzenetet küldünk, az URL címből mentsük az üzenet tartalmát
     var msg = decodeURIComponent(url_parts.pathname).substr(9)
 
-    // Hozzáadjuk a messages array-höz
+    // Hozzáadjuk a messages array-hez
     messages.push(msg);
 
-    // És elküldjük a klienseknek
-    while(clients.length > 0) {
-      var client = clients.pop();
+
+    // Elküldjük a klienseknek az új üzenetet és az össz üzenet számot JSON objectként.
+    for(var i = 0; i < clients.length; i++) {
+      var client = clients[i];
       client.end(JSON.stringify( {
         count: messages.length,
         append: msg+"\n"
       }));
     }
     res.end();
-  }
+  } else if(url_parts.pathname.substr(0, 6) == '/poll/') {
+     // Ha az URL a "localhost:8080/poll/"-ra mutat, akkor töltsük le az új üzeneteket
+
+     // A kliensekhez hozzáadjuk a lekérést
+     clients.push(res);
+
+     // Kinyerjük az URL-ből, hány üzenetet töltött le eddig a kliens
+     var count = url_parts.pathname.substr(6)
+
+     // Ha több üzenet van a szerveren elmentve, mint amennyit
+     // a felhasználó letöltött, válaszként visszaküldjük az új üzeneteket
+     if(messages.length > count) {
+
+       // A slice paranccsal levágjuk a régi üzeneteket
+       var new_messages = messages.slice(count).join("\n")+"\n";
+
+       // JSON object-ként adjuk vissza az új üzeneteket.
+       res.end(JSON.stringify( {
+         count: messages.length,
+         append: new_messages
+       }));
+
+     }
+ }
 }).listen(8080, 'localhost');
 console.log('Server running.');

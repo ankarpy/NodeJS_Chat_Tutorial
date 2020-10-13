@@ -4,28 +4,30 @@
   <meta charset="utf-8">
   <script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
   <script>
-  // Client code
-  var counter = 0;
-  var poll = function() {
-    $.getJSON('/poll/'+counter, function(response) {
-       counter = response.count;
-       var elem = $('#output');
-       elem.text(elem.text() + decodeURIComponent(response.append));
-       poll();
-    });
-  }
-  poll();
 
   $(document).ready(function(){
+    // Gomb lenyomásával üzenet küldése
     $("button").click(function(){
       var name = $("#name").val();
-      if (name == ""){
-        name = "Vendég"
-      }
       var message = $("#message").val();
+
       var name_and_message = encodeURIComponent(name + ": " + message);
       $.get("http://localhost:8080/message/" + name_and_message);
     });
+
+    // POLLING kód, folyamatosan lekérjük van-e újabb üzenet.
+    var counter = 0;
+    var poll = function() {
+      $.getJSON('/poll/'+counter, function(response) {
+        var count = response.count;
+        var message = response.append;
+
+        counter = count;
+        $('#output').text($('#output').text() + decodeURIComponent(message));
+        poll();
+      });
+    }
+    poll();
   });
   </script>
   <style>
@@ -60,7 +62,7 @@
   <h2>Egyszerű chat app</h2>
   <div id="chatAblak">
 
-    <input type="text" placeholder="Felhasználónév" id="name"/>
+    <input type="text" placeholder="Felhasználónév" id="name" value="Vendég"/>
     <textarea id="output" disabled>
     </textarea>
     <input type="text" placeholder="Üzenet" id="message"/>
